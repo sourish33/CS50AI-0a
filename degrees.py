@@ -111,10 +111,10 @@ def main():
 
 def shortest_path(source, target, searchtype=1):
     if (source == target):
-        return None
+        return []
     if not source in people.keys() or not target in people.keys():
         print("source or target not in database")
-        return None
+        return []
     if searchtype == 1:
         Frontier = QueueFrontier()
     else:
@@ -137,23 +137,24 @@ def shortest_path(source, target, searchtype=1):
         newNodeList = []
         checkedList = checked.state_list()
         currentList = Frontier.state_list()
-        current_actors = Frontier.state_list()
+        # current_actors = Frontier.state_list()
 
         for mov in theirMovies:
             actors = get_actors(mov)
             actors = [x for x in actors if not x in currentList and not x in checkedList]
-            NodeList = [Node(x, removedState, mov) for x in actors]
-            newNodeList+=NodeList
+            if target in actors:
+                print("Success!!! after {} iterations".format(n))
+                foundNode = Node(target,removedState,mov)
+                path = get_path(foundNode,startNode,checked)
+                return path
+            else:
+                NodeList = [Node(x, removedState, mov) for x in actors]
+                newNodeList+=NodeList
         Frontier.add(newNodeList)
         n+=1
-        if Frontier.contains_state(target):
-            print("Success!!! after {} iterations".format(n))
-            foundNode = Frontier.get_node_with_state(target)
-            path = get_path(foundNode,startNode,checked)
-            break
         if Frontier.length()<1:
             print("search failed after {} iterations".format(n))
-            return None
+            break
 
     return path
 
