@@ -51,6 +51,31 @@ def load_data(directory):
             except KeyError:
                 pass
 
+def get_movies(actor):
+    return list(set(people[actor]['movies']))
+
+def get_actors(mov):
+    return list(set(movies[mov]['stars']))
+
+def get_path(node, startNode, checked):
+    
+    path = []
+    while(True):
+        if node.parent == startNode.state:
+#             print("Done")
+            pathlet = (node.action, node.state)
+#             print(pathlet)
+            path.append(pathlet)
+            break
+        else:
+            pathlet = (node.action, node.state)
+#             print(pathlet)
+            path.append(pathlet)
+            node = checked.get_node_with_state(node.parent)
+
+    path.reverse()
+    return path
+            
 
 def main():
     if len(sys.argv) > 2:
@@ -84,16 +109,54 @@ def main():
             print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
 
-def shortest_path(source, target):
-    """
-    Returns the shortest list of (movie_id, person_id) pairs
-    that connect the source to the target.
+def shortest_path(source, target, searchtype=1):
+    if (source == target):
+        return None
+    if not source in people.keys() or not target in people.keys():
+        print("source or target not in database")
+        return None
+    if searchtype == 1:
+        Frontier = QueueFrontier()
+    else:
+        Frontier = StackFrontier()
+    checked = StackFrontier()
+    startNode = Node(source,None,None)
+    Frontier.add(startNode)
+    foundNode = None
+    path = []
 
-    If no possible path, returns None.
-    """
+    n=0
+    while(True):
+        removedNode = Frontier.remove()
+        checked.add(removedNode)
+        removedState = removedNode.state
+        if (n%500==0):
+            print("Iteration {}: frontier size: {} checked size {}".format(n, Frontier.length(), checked.length()))
 
-    # TODO
-    raise NotImplementedError
+        theirMovies = get_movies(removedState)
+        newNodeList = []
+        checkedList = checked.state_list()
+        currentList = Frontier.state_list()
+        current_actors = Frontier.state_list()
+
+        for mov in theirMovies:
+            actors = get_actors(mov)
+            actors = [x for x in actors if not x in currentList and not x in checkedList]
+            NodeList = [Node(x, removedState, mov) for x in actors]
+            newNodeList+=NodeList
+        Frontier.add(newNodeList)
+        n+=1
+        if Frontier.contains_state(target):
+            print("Success!!! after {} iterations".format(n))
+            foundNode = Frontier.get_node_with_state(target)
+            path = get_path(foundNode,startNode,checked)
+            break
+        if Frontier.length()<1:
+            print("search failed after {} iterations".format(n))
+            return None
+
+    return path
+
 
 
 def person_id_for_name(name):
